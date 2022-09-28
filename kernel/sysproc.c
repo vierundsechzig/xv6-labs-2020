@@ -70,6 +70,8 @@ sys_sleep(void)
     sleep(&ticks, &tickslock);
   }
   release(&tickslock);
+  
+  backtrace();
   return 0;
 }
 
@@ -94,4 +96,47 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+uint64 sys_sigalarm(void)
+{
+  int ticks;
+  uint64 handler;
+  struct proc* p;
+
+  if (argint(0, &ticks) < 0)
+    return -1;
+  if (argaddr(1, &handler) < 0)
+    return -1;
+  
+  p = myproc();
+  p->alarm_interval = ticks;
+  p->alarm_handler = handler;
+  return 0;
+}
+
+uint64 sys_sigreturn(void)
+{
+  struct proc* p;
+  p = myproc();
+  p->alarm_interval = p->alarm_saved_interval;
+  p->trapframe->epc = p->alarm_saved_trapframe.epc;
+  p->trapframe->ra = p->alarm_saved_trapframe.ra;
+  p->trapframe->gp = p->alarm_saved_trapframe.gp;
+  p->trapframe->tp = p->alarm_saved_trapframe.tp;
+  p->trapframe->sp = p->alarm_saved_trapframe.sp;
+  p->trapframe->s0 = p->alarm_saved_trapframe.s0;
+  p->trapframe->s1 = p->alarm_saved_trapframe.s1;
+  p->trapframe->a0 = p->alarm_saved_trapframe.a0;
+  p->trapframe->a1 = p->alarm_saved_trapframe.a1;
+  p->trapframe->a2 = p->alarm_saved_trapframe.a2;
+  p->trapframe->a3 = p->alarm_saved_trapframe.a3;
+  p->trapframe->a4 = p->alarm_saved_trapframe.a4;
+  p->trapframe->a5 = p->alarm_saved_trapframe.a5;
+  p->trapframe->a6 = p->alarm_saved_trapframe.a6;
+  p->trapframe->a7 = p->alarm_saved_trapframe.a7;
+  p->trapframe->s2 = p->alarm_saved_trapframe.s2;
+  p->trapframe->s3 = p->alarm_saved_trapframe.s3;
+  p->trapframe->s4 = p->alarm_saved_trapframe.s4;
+  return 0;
 }

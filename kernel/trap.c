@@ -78,7 +78,38 @@ usertrap(void)
 
   // give up the CPU if this is a timer interrupt.
   if(which_dev == 2)
+  {
+    if (p->alarm_interval > 0)
+    {
+      ++p->alarm_ticks_passed;
+      if (p->alarm_ticks_passed >= p->alarm_interval)
+      {
+        p->alarm_saved_trapframe.epc = p->trapframe->epc;
+        p->alarm_saved_trapframe.ra = p->trapframe->ra;
+        p->alarm_saved_trapframe.gp = p->trapframe->gp;
+        p->alarm_saved_trapframe.tp = p->trapframe->tp;
+        p->alarm_saved_trapframe.sp = p->trapframe->sp;
+        p->alarm_saved_trapframe.s0 = p->trapframe->s0;
+        p->alarm_saved_trapframe.s1 = p->trapframe->s1;
+        p->alarm_saved_trapframe.a0 = p->trapframe->a0;
+        p->alarm_saved_trapframe.a1 = p->trapframe->a1;
+        p->alarm_saved_trapframe.a2 = p->trapframe->a2;
+        p->alarm_saved_trapframe.a3 = p->trapframe->a3;
+        p->alarm_saved_trapframe.a4 = p->trapframe->a4;
+        p->alarm_saved_trapframe.a5 = p->trapframe->a5;
+        p->alarm_saved_trapframe.a6 = p->trapframe->a6;
+        p->alarm_saved_trapframe.a7 = p->trapframe->a7;
+        p->alarm_saved_trapframe.s2 = p->trapframe->s2;
+        p->alarm_saved_trapframe.s3 = p->trapframe->s3;
+        p->alarm_saved_trapframe.s4 = p->trapframe->s4;
+        p->trapframe->epc = p->alarm_handler;
+        p->alarm_ticks_passed = 0;
+        p->alarm_saved_interval = p->alarm_interval;
+        p->alarm_interval = 0;
+      }
+    }
     yield();
+  }
 
   usertrapret();
 }
